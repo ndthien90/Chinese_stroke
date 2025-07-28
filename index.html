@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Học viết chữ Hán</title>
+    <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Mulish', 'Arial','宋体', serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #ff6b6b, #feca57);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 8px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .input-section {
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        #textInput {
+            flex: 1;
+            padding: 12px 16px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            outline: none;
+            transition: all 0.3s ease;
+            font-family: 'SimSun', '宋体', serif;
+        }
+
+        #textInput:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .parse-btn {
+            padding: 12px 20px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            white-space: nowrap;
+           font-family: 'Mulish', 'Arial','宋体', serif;
+        }
+
+        .parse-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .quick-examples {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .example-label {
+            color: #666;
+            font-size: 13px;
+            margin-right: 5px;
+            white-space: nowrap;
+            display: none;
+        }
+
+        .example-btn {
+            padding: 6px 12px;
+            background: #e9ecef;
+            border: 1px solid #ddd;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s ease;
+            font-family: 'SimSun', '宋体', serif;
+        }
+
+        .example-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .characters-section {
+            padding: 20px;
+        }
+
+        .characters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+            gap: 12px;
+            justify-items: center;
+            margin-bottom: 20px;
+        }
+
+        .character-item {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: bold;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .character-item:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .character-item:active {
+            transform: translateY(-1px) scale(1.02);
+        }
+
+        .character-item.active {
+            background: linear-gradient(135deg, #ff6b6b, #feca57);
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+        }
+
+        .character-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .character-item:hover::before {
+            left: 100%;
+        }
+
+        .writer-section {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #eee;
+            //height: 600px; /* Chiều cao cố định */
+            overflow: hidden;
+            transition: all 0.4s ease;
+            position: relative;
+        }
+
+        .writer-section.hidden {
+            height: 0;
+            padding: 0;
+            border-top: none;
+        }
+
+        .writer-container {
+            display: inline-block;
+            padding: 20px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin: 15px 0;
+            max-width: 100%;
+        }
+
+        .current-character {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: bold;
+            display:none;
+        }
+
+        #writer {
+            margin: 0 auto;
+            max-width: 100%;
+        }
+
+        .controls {
+            margin-top: 15px;
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            padding: 8px 16px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
+        .control-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .control-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .control-btn:disabled:hover {
+            background: white;
+            color: #667eea;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .instruction {
+            text-align: center;
+            color: #666;
+            font-size: 16px;
+            margin: 30px auto;
+            padding: 15px;
+            background: #e8f2ff;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            height: 80px; /* Chiều cao cố định */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: calc(100% - 40px);
+            max-width: 600px;
+        }
+
+        .instruction.fade-out {
+            opacity: 0;
+            transform: translate(-50%, -60%);
+            pointer-events: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 15px;
+            color: #667eea;
+            font-weight: bold;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 10;
+            min-width: 120px;
+        }
+
+        .error-message {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+
+        .quiz-feedback {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .quiz-feedback.correct {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .quiz-feedback.mistake {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .quiz-feedback.complete {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            body {
+                padding: 5px;
+            }
+
+            .container {
+                border-radius: 15px;
+            }
+
+            .header {
+                padding: 15px;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+                margin-bottom: 5px;
+            }
+
+            .header p {
+                font-size: 0.9em;
+            }
+
+            .input-section {
+                padding: 15px;
+            }
+
+            .input-container {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .parse-btn {
+                width: 100%;
+                padding: 15px;
+                font-size: 16px;
+            }
+
+            .quick-examples {
+                justify-content: center;
+            }
+
+            .example-label {
+                width: 100%;
+                text-align: center;
+                margin-bottom: 8px;
+            }
+
+            .characters-section {
+                padding: 15px;
+                min-height: 150px; /* Giảm chiều cao tối thiểu trên mobile */
+            }
+
+            .characters-grid {
+                grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+                gap: 10px;
+            }
+
+            .character-item {
+                width: 60px;
+                height: 60px;
+                font-size: 24px;
+            }
+
+            .writer-section {
+                padding: 15px;
+                min-height: 400px; /* Giảm chiều cao tối thiểu trên mobile */
+            }
+
+            .writer-container {
+                padding: 15px;
+                margin: 10px 0;
+            }
+
+            .current-character {
+                font-size: 18px;
+                margin-bottom: 10px;
+            }
+
+            .controls {
+                flex-direction: row;
+                justify-content: center;
+                gap: 6px;
+            }
+
+            .control-btn {
+                flex: 1;
+                min-width: 0;
+                padding: 10px 8px;
+                font-size: 12px;
+                text-align: center;
+            }
+
+            .instruction {
+                font-size: 14px;
+                margin: 20px 0;
+                padding: 12px;
+            }
+
+            .quiz-feedback {
+                font-size: 13px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 1.6em;
+            }
+
+            .characters-grid {
+                grid-template-columns: repeat(auto-fit, minmax(55px, 1fr));
+                gap: 8px;
+            }
+
+            .character-item {
+                width: 55px;
+                height: 55px;
+                font-size: 20px;
+            }
+
+            .example-btn {
+                padding: 8px 12px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Học viết chữ Hán</h1>
+        </div>
+
+        <div class="input-section">
+            <div class="input-container">
+                <input 
+                    type="text" 
+                    id="textInput" 
+                    placeholder="Nhập câu tiếng Trung...."
+                    value="我爱学习中文"
+                >
+                <button class="parse-btn" onclick="parseText()">
+                   Phân tích
+                </button>
+            </div>
+            
+            <div class="quick-examples">
+                <span class="example-label">Ví dụ nhanh:</span>
+            </div>
+        </div>
+
+        <div class="characters-section">
+            <div id="charactersGrid" class="characters-grid">
+                <!-- Characters will be displayed here -->
+            </div>
+            
+            <div id="instruction" class="instruction">
+                👆 Nhập câu tiếng Trung ở trên và nhấn "Phân tích" để bắt đầu học viết!
+            </div>
+        </div>
+
+        <div id="writerSection" class="writer-section hidden">
+            <div class="writer-container">
+                <div class="current-character">正在学习: <span id="currentChar"></span></div>
+                <div id="writer"></div>
+                <div id="loadingMessage" class="loading hidden">Đang tải...</div>
+                <div id="quizFeedback" class="quiz-feedback hidden"></div>
+            </div>
+                <div class="controls">
+                    <button class="control-btn" onclick="animateCharacter()">🎬 </button>
+                    <button class="control-btn" onclick="showCharacter()">👁️ </button>
+                    <button class="control-btn" onclick="hideCharacter()">🙈 </button>
+                    <button class="control-btn" onclick="startQuiz()">✍️ </button>
+                    <button class="control-btn" onclick="cancelQuiz()" id="cancelBtn" style="display: none;">❌ </button>
+                </div>
+        </div>
+    </div>
+
+    <script>
+        let currentWriter = null;
+        let currentCharacter = '';
+        let characters = [];
+        let isQuizMode = false;
+        let isInitialized = false;
+
+        // Initialize app
+        window.onload = function() {
+            console.log('App initialized');
+            parseText();
+        };
+
+        // Parse input text into characters
+        function parseText() {
+            const input = document.getElementById('textInput').value.trim();
+            if (!input) {
+                alert('请输入中文句子！(Vui lòng nhập câu tiếng Trung!)');
+                return;
+            }
+
+            // Extract Chinese characters
+            characters = input.split('').filter(char => 
+                /[\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff]/.test(char)
+            );
+
+            console.log('Parsed characters:', characters);
+            displayCharacters();
+            
+            // Reset instruction nếu parse lại và không có ký tự
+            const instruction = document.getElementById('instruction');
+            if (characters.length === 0) {
+                instruction.classList.remove('fade-out');
+            }
+        }
+
+        // Display characters in grid
+        function displayCharacters() {
+            const grid = document.getElementById('charactersGrid');
+            grid.innerHTML = '';
+
+            characters.forEach((char, index) => {
+                const charElement = document.createElement('div');
+                charElement.className = 'character-item';
+                charElement.textContent = char;
+                charElement.onclick = () => showCharacterWriter(char, charElement);
+                grid.appendChild(charElement);
+            });
+
+            // Ẩn instruction với fade out nhưng không thay đổi layout
+            const instruction = document.getElementById('instruction');
+            if (characters.length > 0) {
+                instruction.classList.add('fade-out');
+                // Không xóa khỏi DOM, chỉ ẩn đi
+            }
+        }
+
+        // Create SVG with background grid - IMPROVED VERSION
+        function initializeSVG(containerId, size) {
+            const container = document.getElementById(containerId);
+            
+            // Check if SVG already exists and has correct size
+            const existingSVG = container.querySelector('svg');
+            if (existingSVG && 
+                existingSVG.getAttribute('width') == size && 
+                existingSVG.getAttribute('height') == size) {
+                // SVG exists with correct size, just clear character strokes but keep grid
+                clearSVGCharacterContent(existingSVG);
+                return existingSVG.id;
+            }
+            
+            // Only clear and recreate if size changed or no SVG exists
+            container.innerHTML = '';
+            
+            // Create SVG element
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            const svgId = containerId + '-svg';
+            svg.setAttribute('width', size);
+            svg.setAttribute('height', size);
+            svg.setAttribute('id', svgId);
+            svg.style.border = '1px solid #DDD';
+            
+            // Add grid lines with a specific class for identification
+            const lines = [
+                // Diagonal lines
+                { x1: 0, y1: 0, x2: size, y2: size },
+                { x1: size, y1: 0, x2: 0, y2: size },
+                // Center lines
+                { x1: size/2, y1: 0, x2: size/2, y2: size },
+                { x1: 0, y1: size/2, x2: size, y2: size/2 }
+            ];
+            
+            lines.forEach(lineData => {
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', lineData.x1);
+                line.setAttribute('y1', lineData.y1);
+                line.setAttribute('x2', lineData.x2);
+                line.setAttribute('y2', lineData.y2);
+                line.setAttribute('stroke', '#DDD');
+                line.setAttribute('class', 'grid-line'); // Mark as grid line
+                svg.appendChild(line);
+            });
+            
+            container.appendChild(svg);
+            return svgId;
+        }
+
+        // Clear only character content, keep grid lines
+        function clearSVGCharacterContent(svg) {
+            // Remove all elements except grid lines
+            const elementsToRemove = svg.querySelectorAll('*:not(.grid-line)');
+            elementsToRemove.forEach(element => element.remove());
+        }
+
+        // Show character writer - IMPROVED VERSION
+        async function showCharacterWriter(character, element) {
+            // Update active character styling
+            document.querySelectorAll('.character-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            element.classList.add('active');
+
+            // Show writer section với animation mượt
+            const writerSection = document.getElementById('writerSection');
+            const isFirstTime = writerSection.classList.contains('hidden');
+            
+            if (isFirstTime) {
+                writerSection.classList.remove('hidden');
+                // Trigger reflow để animation hoạt động
+                writerSection.offsetHeight;
+                
+                // Scroll mượt đến writer section
+                setTimeout(() => {
+                    writerSection.scrollIntoView({ 
+                        behavior: 'smooth',
+                        block: 'center'
+                    });
+                }, 150);
+            }
+
+            // Reset UI state
+            hideQuizFeedback();
+            resetControlButtons();
+
+            // If this is the same character and writer exists, just animate
+            if (currentCharacter === character && currentWriter && isInitialized) {
+                console.log('Same character, just animating...');
+                setTimeout(() => {
+                    if (currentWriter && !isQuizMode) {
+                        currentWriter.animateCharacter();
+                    }
+                }, 100);
+                return;
+            }
+
+            // Update current character
+            currentCharacter = character;
+            document.getElementById('currentChar').textContent = character;
+
+            try {
+                if (!isInitialized) {
+                    // First time - create new writer
+                    showLoadingMessage();
+                    await createWriter(character);
+                    isInitialized = true;
+                } else {
+                    // Subsequent times - use setCharacter to avoid flicker
+                    console.log('Updating character to:', character);
+                    // Don't show loading for character changes to reduce flicker
+                    await currentWriter.setCharacter(character);
+                    
+                    // Auto animate after character change
+                    setTimeout(() => {
+                        if (currentWriter && !isQuizMode) {
+                            currentWriter.animateCharacter();
+                        }
+                    }, 200);
+                }
+            } catch (error) {
+                console.error('Error updating character:', error);
+                hideLoadingMessage();
+                showQuizFeedback(`切换到字符 "${character}" 时出错`, 'mistake');
+            }
+        }
+
+        // Create HanziWriter instance - IMPROVED VERSION
+        async function createWriter(character) {
+            try {
+                // Get viewport dimensions for responsive sizing
+                const viewportWidth = window.innerWidth;
+                const writerSize = viewportWidth <= 480 ? 280 : 
+                                 viewportWidth <= 768 ? 320 : 360;
+
+                // Initialize SVG (only creates if needed)
+                const svgId = initializeSVG('writer', writerSize);
+
+                // Create new HanziWriter instance
+                currentWriter = HanziWriter.create(svgId, character, {
+                    width: writerSize,
+                    height: writerSize,
+                    padding: 20,
+                    strokeColor: '#555',
+                    strokeAnimationSpeed: 1,
+                    delayBetweenStrokes: 500,
+                    showOutline: true,
+                    showCharacter: true,
+                    onLoadCharDataSuccess: function(data) {
+                        console.log('Character data loaded successfully for:', character);
+                        hideLoadingMessage();
+                        // Auto animate when character loads
+                        setTimeout(() => {
+                            if (currentWriter && !isQuizMode) {
+                                currentWriter.animateCharacter();
+                            }
+                        }, 100);
+                    },
+                    onLoadCharDataError: function(reason) {
+                        console.error('Failed to load character data:', reason);
+                        hideLoadingMessage();
+                        showQuizFeedback(`无法加载字符 "${character}" 的数据。可能是网络问题或字符不支持。`, 'mistake');
+                    }
+                });
+
+                return currentWriter;
+
+            } catch (error) {
+                console.error('Error creating HanziWriter:', error);
+                hideLoadingMessage();
+                showQuizFeedback(`创建字符写手时出错: ${error.message}`, 'mistake');
+                throw error;
+            }
+        }
+
+        // Control functions
+        function animateCharacter() {
+            if (currentWriter) {
+                currentWriter.animateCharacter();
+                hideQuizFeedback();
+            } else {
+                alert('请先选择一个字符！');
+            }
+        }
+
+        function showCharacter() {
+            if (currentWriter) {
+                currentWriter.showCharacter();
+                hideQuizFeedback();
+            }
+        }
+
+        function hideCharacter() {
+            if (currentWriter) {
+                currentWriter.hideCharacter();
+                hideQuizFeedback();
+            }
+        }
+
+        function startQuiz() {
+            if (!currentWriter) {
+                alert('请先选择一个字符！');
+                return;
+            }
+
+            isQuizMode = true;
+            hideQuizFeedback();
+            
+            // Update button states
+            document.getElementById('cancelBtn').style.display = 'inline-block';
+            
+            currentWriter.quiz({
+                onCorrectStroke: function(strokeData) {
+                    showQuizFeedback(
+                        `Tuyệt！Nét thứ ${strokeData.strokeNum + 1} chính xác！Còn lại ${strokeData.strokesRemaining} nét.`, 
+                        'correct'
+                    );
+                },
+                onMistake: function(strokeData) {
+                    showQuizFeedback(
+                        `Nét này chưa đúng，hãy thử lại！（Nét thứ ${strokeData.strokeNum + 1} ，Sai ${strokeData.mistakesOnStroke} lần）`, 
+                        'mistake'
+                    );
+                },
+                onComplete: function(summaryData) {
+                    isQuizMode = false;
+                    document.getElementById('cancelBtn').style.display = 'none';
+                    showQuizFeedback(
+                        `🎉 Chúc mừng bạn đã viết xong: ${summaryData.character}！Lỗi sai: ${summaryData.totalMistakes} .`, 
+                        'complete'
+                    );
+                },
+                showHintAfterMisses: 3,
+                highlightOnComplete: true
+            });
+        }
+
+        function cancelQuiz() {
+            if (currentWriter && isQuizMode) {
+                currentWriter.cancelQuiz();
+                isQuizMode = false;
+                document.getElementById('cancelBtn').style.display = 'none';
+                hideQuizFeedback();
+            }
+        }
+
+        // UI helper functions
+        function showLoadingMessage() {
+            document.getElementById('loadingMessage').classList.remove('hidden');
+        }
+
+        function hideLoadingMessage() {
+            document.getElementById('loadingMessage').classList.add('hidden');
+        }
+
+        function showQuizFeedback(message, type) {
+            const feedback = document.getElementById('quizFeedback');
+            feedback.textContent = message;
+            feedback.className = `quiz-feedback ${type}`;
+            feedback.classList.remove('hidden');
+        }
+
+        function hideQuizFeedback() {
+            document.getElementById('quizFeedback').classList.add('hidden');
+        }
+
+        function resetControlButtons() {
+            document.getElementById('cancelBtn').style.display = 'none';
+            isQuizMode = false;
+        }
+
+        // Set example text
+        function setExample(text) {
+            document.getElementById('textInput').value = text;
+            parseText();
+        }
+
+        // Auto parse on Enter key
+        document.getElementById('textInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                parseText();
+            }
+        });
+
+        // Handle window resize for responsive writer
+        window.addEventListener('resize', function() {
+            if (currentWriter && currentCharacter && isInitialized) {
+                // Mark as not initialized to force recreation on next character selection
+                const viewportWidth = window.innerWidth;
+                const newSize = viewportWidth <= 480 ? 280 : 
+                               viewportWidth <= 768 ? 320 : 360;
+                
+                // Only recreate if size actually changed
+                const currentSVG = document.querySelector('#writer-svg');
+                if (currentSVG && currentSVG.getAttribute('width') != newSize) {
+                    isInitialized = false;
+                    setTimeout(() => {
+                        const activeElement = document.querySelector('.character-item.active');
+                        if (activeElement) {
+                            showCharacterWriter(currentCharacter, activeElement);
+                        }
+                    }, 100);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
